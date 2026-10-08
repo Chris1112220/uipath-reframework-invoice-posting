@@ -1,0 +1,116 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="WriteRunReport">
+  <x:Members>
+    <x:Property Name="in_ReportPath" Type="InArgument(x:String)"/>
+    <x:Property Name="in_Reference" Type="InArgument(x:String)"/>
+    <x:Property Name="in_Status" Type="InArgument(x:String)"/>
+    <x:Property Name="in_ExceptionType" Type="InArgument(x:String)"/>
+    <x:Property Name="in_Reason" Type="InArgument(x:String)"/>
+    <x:Property Name="in_JournalId" Type="InArgument(x:String)"/>
+  </x:Members>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="16">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="17">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Write Run Report" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtRow"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Purpose" Text="Appends one status line to the run report created during Init. Failures here are swallowed by the caller so a reporting problem never stops posting." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <Assign DisplayName="01 - Create Row Table" sap2010:WorkflowViewState.IdRef="Assign_1">
+      <Assign.To>
+        <OutArgument x:TypeArguments="sd:DataTable">[dtRow]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="sd:DataTable">[New DataTable]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <InvokeMethod DisplayName="Add Column Timestamp" sap2010:WorkflowViewState.IdRef="InvokeMethod_1" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[dtRow.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Timestamp"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column Reference" sap2010:WorkflowViewState.IdRef="InvokeMethod_2" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[dtRow.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Reference"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column Status" sap2010:WorkflowViewState.IdRef="InvokeMethod_3" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[dtRow.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Status"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column ExceptionType" sap2010:WorkflowViewState.IdRef="InvokeMethod_4" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[dtRow.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["ExceptionType"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column Reason" sap2010:WorkflowViewState.IdRef="InvokeMethod_5" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[dtRow.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Reason"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column JournalId" sap2010:WorkflowViewState.IdRef="InvokeMethod_6" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[dtRow.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["JournalId"]</InArgument>
+    </InvokeMethod>
+    <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{Now.ToString(&quot;yyyy-MM-dd HH:mm:ss&quot;, CultureInfo.InvariantCulture), in_Reference, in_Status, in_ExceptionType, in_Reason, in_JournalId}]" DataTable="[dtRow]" DisplayName="02 - Add Status Row" sap2010:WorkflowViewState.IdRef="AddDataRow_1"/>
+    <If Condition="[File.Exists(in_ReportPath)]" DisplayName="If Report Exists" sap2010:WorkflowViewState.IdRef="If_1">
+      <If.Then>
+        <ui:AppendRange DataTable="[dtRow]" DisplayName="Append Status Row" SheetName="[&quot;RunReport&quot;]" WorkbookPath="[in_ReportPath]" sap2010:WorkflowViewState.IdRef="AppendRange_1"/>
+      </If.Then>
+      <If.Else>
+        <ui:WriteRange AddHeaders="True" DataTable="[dtRow]" DisplayName="Create Report With Headers" SheetName="[&quot;RunReport&quot;]" StartingCell="A1" WorkbookPath="[in_ReportPath]" sap2010:WorkflowViewState.IdRef="WriteRange_1"/>
+      </If.Else>
+    </If>
+  </Sequence>
+</Activity>

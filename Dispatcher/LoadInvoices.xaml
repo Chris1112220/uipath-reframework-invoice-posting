@@ -1,0 +1,233 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="LoadInvoices">
+  <x:Members>
+    <x:Property Name="in_InvoicePath" Type="InArgument(x:String)"/>
+    <x:Property Name="in_SheetName" Type="InArgument(x:String)"/>
+    <x:Property Name="out_Invoices" Type="OutArgument(sd:DataTable)"/>
+    <x:Property Name="out_Rejected" Type="OutArgument(sd:DataTable)"/>
+  </x:Members>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="16">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="17">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Load And Validate Invoices" sap2010:WorkflowViewState.IdRef="Sequence_3">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtRaw"/>
+      <Variable x:TypeArguments="x:String" Name="strInvoice"/>
+      <Variable x:TypeArguments="x:Int32" Default="1" Name="intExcelRow"/>
+      <Variable x:TypeArguments="scg:List(x:String)" Default="[New List(Of String)]" Name="lstSeen"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Purpose" Text="Structural checks only (the Performer owns business rules): a row needs an invoice number, a numeric amount, a valid date, and must not repeat an invoice number already seen in the file. Valid rows are normalized to text (yyyy-MM-dd dates, invariant 0.00 amounts) so queue items look the same on every machine." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <If Condition="[Not File.Exists(in_InvoicePath)]" DisplayName="If Invoice File Missing" sap2010:WorkflowViewState.IdRef="If_5">
+      <If.Then>
+        <Throw DisplayName="Throw Invoice File Missing" Exception="[New FileNotFoundException(&quot;Invoice input file not found: &quot; + in_InvoicePath, in_InvoicePath)]" sap2010:WorkflowViewState.IdRef="Throw_1"/>
+      </If.Then>
+    </If>
+    <ui:ReadRange AddHeaders="True" DataTable="[dtRaw]" DisplayName="Read Invoice Register" Range="{x:Null}" SheetName="[in_SheetName]" WorkbookPath="[in_InvoicePath]" sap2010:WorkflowViewState.IdRef="ReadRange_1"/>
+    <Assign DisplayName="Create Invoices Table" sap2010:WorkflowViewState.IdRef="Assign_1">
+      <Assign.To>
+        <OutArgument x:TypeArguments="sd:DataTable">[out_Invoices]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="sd:DataTable">[New DataTable("Invoices")]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <InvokeMethod DisplayName="Add Column InvoiceNumber" sap2010:WorkflowViewState.IdRef="InvokeMethod_1" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Invoices.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["InvoiceNumber"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column InvoiceDate" sap2010:WorkflowViewState.IdRef="InvokeMethod_2" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Invoices.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["InvoiceDate"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column VendorId" sap2010:WorkflowViewState.IdRef="InvokeMethod_3" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Invoices.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["VendorId"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column VendorName" sap2010:WorkflowViewState.IdRef="InvokeMethod_4" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Invoices.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["VendorName"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column PONumber" sap2010:WorkflowViewState.IdRef="InvokeMethod_5" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Invoices.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["PONumber"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column Amount" sap2010:WorkflowViewState.IdRef="InvokeMethod_6" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Invoices.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Amount"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column Currency" sap2010:WorkflowViewState.IdRef="InvokeMethod_7" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Invoices.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Currency"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column Description" sap2010:WorkflowViewState.IdRef="InvokeMethod_8" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Invoices.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Description"]</InArgument>
+    </InvokeMethod>
+    <Assign DisplayName="Create Rejected Table" sap2010:WorkflowViewState.IdRef="Assign_2">
+      <Assign.To>
+        <OutArgument x:TypeArguments="sd:DataTable">[out_Rejected]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="sd:DataTable">[New DataTable("Rejected")]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <InvokeMethod DisplayName="Add Rejected Column ExcelRow" sap2010:WorkflowViewState.IdRef="InvokeMethod_9" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Rejected.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["ExcelRow"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Rejected Column InvoiceNumber" sap2010:WorkflowViewState.IdRef="InvokeMethod_10" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Rejected.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["InvoiceNumber"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Rejected Column Status" sap2010:WorkflowViewState.IdRef="InvokeMethod_11" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Rejected.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Status"]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Rejected Column Reason" sap2010:WorkflowViewState.IdRef="InvokeMethod_12" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_Rejected.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Reason"]</InArgument>
+    </InvokeMethod>
+    <ui:ForEachRow CurrentIndex="{x:Null}" DataTable="[dtRaw]" DisplayName="For Each Invoice Row" sap2010:WorkflowViewState.IdRef="ForEachRow_1">
+      <ui:ForEachRow.Body>
+        <ActivityAction x:TypeArguments="sd:DataRow">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="sd:DataRow" Name="row"/>
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_2">
+            <sap:WorkflowViewStateService.ViewState>
+              <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+              </scg:Dictionary>
+            </sap:WorkflowViewStateService.ViewState>
+            <Assign DisplayName="Next Excel Row Number" sap2010:WorkflowViewState.IdRef="Assign_3">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:Int32">[intExcelRow]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:Int32">[intExcelRow + 1]</InArgument>
+              </Assign.Value>
+            </Assign>
+            <Assign DisplayName="Get Invoice Number" sap2010:WorkflowViewState.IdRef="Assign_4">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">[strInvoice]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">[Convert.ToString(row("InvoiceNumber")).Trim]</InArgument>
+              </Assign.Value>
+            </Assign>
+            <If Condition="[String.IsNullOrWhiteSpace(strInvoice)]" DisplayName="If Invoice Number Present" sap2010:WorkflowViewState.IdRef="If_4">
+              <If.Then>
+                <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{intExcelRow.ToString, strInvoice, &quot;Rejected&quot;, &quot;Missing invoice number.&quot;}]" DataTable="[out_Rejected]" DisplayName="Reject Blank Invoice Number" sap2010:WorkflowViewState.IdRef="AddDataRow_2"/>
+              </If.Then>
+              <If.Else>
+                <If Condition="[Not IsNumeric(Convert.ToString(row(&quot;Amount&quot;)))]" DisplayName="If Amount Numeric" sap2010:WorkflowViewState.IdRef="If_3">
+                  <If.Then>
+                    <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{intExcelRow.ToString, strInvoice, &quot;Rejected&quot;, &quot;Amount is not numeric.&quot;}]" DataTable="[out_Rejected]" DisplayName="Reject Non-Numeric Amount" sap2010:WorkflowViewState.IdRef="AddDataRow_3"/>
+                  </If.Then>
+                  <If.Else>
+                    <If Condition="[lstSeen.Contains(strInvoice.ToUpperInvariant)]" DisplayName="If Duplicate In File" sap2010:WorkflowViewState.IdRef="If_2">
+                      <If.Then>
+                        <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{intExcelRow.ToString, strInvoice, &quot;Duplicate&quot;, &quot;Invoice number already seen in this file (not queued).&quot;}]" DataTable="[out_Rejected]" DisplayName="Record Duplicate" sap2010:WorkflowViewState.IdRef="AddDataRow_4"/>
+                      </If.Then>
+                      <If.Else>
+                        <If Condition="[Not (TypeOf row(&quot;InvoiceDate&quot;) Is DateTime OrElse TypeOf row(&quot;InvoiceDate&quot;) Is Double OrElse IsDate(Convert.ToString(row(&quot;InvoiceDate&quot;))))]" DisplayName="If Date Valid" sap2010:WorkflowViewState.IdRef="If_1">
+                          <If.Then>
+                            <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{intExcelRow.ToString, strInvoice, &quot;Rejected&quot;, &quot;Invoice date is not a valid date.&quot;}]" DataTable="[out_Rejected]" DisplayName="Reject Bad Date" sap2010:WorkflowViewState.IdRef="AddDataRow_5"/>
+                          </If.Then>
+                          <If.Else>
+                            <Sequence DisplayName="Else" sap2010:WorkflowViewState.IdRef="Sequence_1">
+                              <sap:WorkflowViewStateService.ViewState>
+                                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                  <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                                </scg:Dictionary>
+                              </sap:WorkflowViewStateService.ViewState>
+                              <InvokeMethod DisplayName="Remember Invoice Number" sap2010:WorkflowViewState.IdRef="InvokeMethod_13" MethodName="Add">
+                                <InvokeMethod.TargetObject>
+                                  <InArgument x:TypeArguments="scg:List(x:String)">[lstSeen]</InArgument>
+                                </InvokeMethod.TargetObject>
+                                <InArgument x:TypeArguments="x:String">[strInvoice.ToUpperInvariant]</InArgument>
+                              </InvokeMethod>
+                              <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{strInvoice, If(TypeOf row(&quot;InvoiceDate&quot;) Is DateTime, CDate(row(&quot;InvoiceDate&quot;)), If(TypeOf row(&quot;InvoiceDate&quot;) Is Double, DateTime.FromOADate(CDbl(row(&quot;InvoiceDate&quot;))), DateTime.Parse(Convert.ToString(row(&quot;InvoiceDate&quot;)), CultureInfo.InvariantCulture))).ToString(&quot;yyyy-MM-dd&quot;, CultureInfo.InvariantCulture), Convert.ToString(row(&quot;VendorId&quot;)).Trim, Convert.ToString(row(&quot;VendorName&quot;)).Trim, Convert.ToString(row(&quot;PONumber&quot;)).Trim, Convert.ToDecimal(row(&quot;Amount&quot;), CultureInfo.InvariantCulture).ToString(&quot;0.00&quot;, CultureInfo.InvariantCulture), Convert.ToString(row(&quot;Currency&quot;)).Trim, Convert.ToString(row(&quot;Description&quot;)).Trim}]" DataTable="[out_Invoices]" DisplayName="Add Normalized Invoice" sap2010:WorkflowViewState.IdRef="AddDataRow_1"/>
+                            </Sequence>
+                          </If.Else>
+                        </If>
+                      </If.Else>
+                    </If>
+                  </If.Else>
+                </If>
+              </If.Else>
+            </If>
+          </Sequence>
+        </ActivityAction>
+      </ui:ForEachRow.Body>
+    </ui:ForEachRow>
+    <ui:LogMessage DisplayName="Log Load Summary" Level="Info" Message="[&quot;Loaded &quot; + out_Invoices.Rows.Count.ToString + &quot; valid invoice(s); &quot; + out_Rejected.Rows.Count.ToString + &quot; row(s) rejected or duplicate.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1"/>
+  </Sequence>
+</Activity>

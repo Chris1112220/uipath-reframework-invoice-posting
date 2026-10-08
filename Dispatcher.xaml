@@ -1,0 +1,220 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="Dispatcher">
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="16">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="17">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Invoice Posting - Dispatcher" sap2010:WorkflowViewState.IdRef="Sequence_4">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:Object)" Name="Config"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtInvoices"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtRejected"/>
+      <Variable x:TypeArguments="x:String" Name="strReportPath"/>
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="intQueued"/>
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="intDuplicates"/>
+      <Variable x:TypeArguments="x:Object" Name="objIgnored"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Purpose" Text="Dispatcher: reads Data\Input\Invoices.xlsx, applies structural checks, and adds one queue item per invoice to the InvoicePosting queue with Reference = InvoiceNumber. With &quot;Enforce unique references&quot; enabled on the queue, re-running the Dispatcher on the same file cannot create a second item for an invoice. Run Main.xaml (the Performer) afterwards." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <ui:LogMessage DisplayName="Log Dispatcher Start" Level="Info" Message="[&quot;Dispatcher started.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_3"/>
+    <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Invoke InitAllSettings" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_3" UnSafe="False" WorkflowFileName="Framework\InitAllSettings.xaml">
+      <ui:InvokeWorkflowFile.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_ConfigFile">["Data\Config.xlsx"]</InArgument>
+        <InArgument x:TypeArguments="s:String[]" x:Key="in_ConfigSheets">[{"Settings", "Constants"}]</InArgument>
+        <OutArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)" x:Key="out_Config">[Config]</OutArgument>
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
+    <Assign DisplayName="Ensure Report Folder" sap2010:WorkflowViewState.IdRef="Assign_3">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Object">[objIgnored]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Object">[Directory.CreateDirectory(Config("RunReportFolder").ToString)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Set Dispatcher Report Path" sap2010:WorkflowViewState.IdRef="Assign_4">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">[strReportPath]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[Path.Combine(Config("RunReportFolder").ToString, "DispatcherReport_" + Now.ToString("yyyyMMdd_HHmmss") + ".xlsx")]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Invoke LoadInvoices" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_4" UnSafe="False" WorkflowFileName="Dispatcher\LoadInvoices.xaml">
+      <ui:InvokeWorkflowFile.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_InvoicePath">[Config("InvoiceInputPath").ToString]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_SheetName">[Config("InvoiceSheetName").ToString]</InArgument>
+        <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_Invoices">[dtInvoices]</OutArgument>
+        <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_Rejected">[dtRejected]</OutArgument>
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
+    <ui:ForEachRow CurrentIndex="{x:Null}" DataTable="[dtRejected]" DisplayName="For Each Rejected Row" sap2010:WorkflowViewState.IdRef="ForEachRow_2">
+      <ui:ForEachRow.Body>
+        <ActivityAction x:TypeArguments="sd:DataRow">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="sd:DataRow" Name="rowRejected"/>
+          </ActivityAction.Argument>
+          <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Report Rejected Row" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_5" UnSafe="False" WorkflowFileName="Reporting\WriteRunReport.xaml">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="x:String" x:Key="in_ReportPath">[strReportPath]</InArgument>
+              <InArgument x:TypeArguments="x:String" x:Key="in_Reference">[If(String.IsNullOrWhiteSpace(rowRejected("InvoiceNumber").ToString), "(Excel row " + rowRejected("ExcelRow").ToString + ")", rowRejected("InvoiceNumber").ToString)]</InArgument>
+              <InArgument x:TypeArguments="x:String" x:Key="in_Status">[rowRejected("Status").ToString]</InArgument>
+              <InArgument x:TypeArguments="x:String" x:Key="in_ExceptionType">["Business"]</InArgument>
+              <InArgument x:TypeArguments="x:String" x:Key="in_Reason">[rowRejected("Reason").ToString]</InArgument>
+              <InArgument x:TypeArguments="x:String" x:Key="in_JournalId">[""]</InArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+        </ActivityAction>
+      </ui:ForEachRow.Body>
+    </ui:ForEachRow>
+    <If Condition="[Config(&quot;RunMode&quot;).ToString.Equals(&quot;Orchestrator&quot;, StringComparison.OrdinalIgnoreCase)]" DisplayName="If Orchestrator Mode" sap2010:WorkflowViewState.IdRef="If_2">
+      <If.Then>
+        <ui:ForEachRow CurrentIndex="{x:Null}" DataTable="[dtInvoices]" DisplayName="For Each Valid Invoice" sap2010:WorkflowViewState.IdRef="ForEachRow_1">
+          <ui:ForEachRow.Body>
+            <ActivityAction x:TypeArguments="sd:DataRow">
+              <ActivityAction.Argument>
+                <DelegateInArgument x:TypeArguments="sd:DataRow" Name="rowInvoice"/>
+              </ActivityAction.Argument>
+              <TryCatch DisplayName="Try Add Queue Item" sap2010:WorkflowViewState.IdRef="TryCatch_1">
+                <TryCatch.Try>
+                  <Sequence DisplayName="Try" sap2010:WorkflowViewState.IdRef="Sequence_3">
+                    <sap:WorkflowViewStateService.ViewState>
+                      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                      </scg:Dictionary>
+                    </sap:WorkflowViewStateService.ViewState>
+                    <ui:AddQueueItem DisplayName="Add Queue Item (Reference = Invoice Number)" FolderPath="[Config(&quot;OrchestratorQueueFolder&quot;).ToString]" Priority="Normal" QueueType="[Config(&quot;OrchestratorQueueName&quot;).ToString]" Reference="[rowInvoice(&quot;InvoiceNumber&quot;).ToString]" sap2010:WorkflowViewState.IdRef="AddQueueItem_1">
+                      <ui:AddQueueItem.ItemInformation>
+                        <InArgument x:TypeArguments="x:String" x:Key="InvoiceNumber">[rowInvoice("InvoiceNumber").ToString]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="InvoiceDate">[rowInvoice("InvoiceDate").ToString]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="VendorId">[rowInvoice("VendorId").ToString]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="VendorName">[rowInvoice("VendorName").ToString]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="PONumber">[rowInvoice("PONumber").ToString]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="Amount">[rowInvoice("Amount").ToString]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="Currency">[rowInvoice("Currency").ToString]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="Description">[rowInvoice("Description").ToString]</InArgument>
+                      </ui:AddQueueItem.ItemInformation>
+                    </ui:AddQueueItem>
+                    <Assign DisplayName="Count Queued" sap2010:WorkflowViewState.IdRef="Assign_1">
+                      <Assign.To>
+                        <OutArgument x:TypeArguments="x:Int32">[intQueued]</OutArgument>
+                      </Assign.To>
+                      <Assign.Value>
+                        <InArgument x:TypeArguments="x:Int32">[intQueued + 1]</InArgument>
+                      </Assign.Value>
+                    </Assign>
+                    <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Report Queued" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_1" UnSafe="False" WorkflowFileName="Reporting\WriteRunReport.xaml">
+                      <ui:InvokeWorkflowFile.Arguments>
+                        <InArgument x:TypeArguments="x:String" x:Key="in_ReportPath">[strReportPath]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="in_Reference">[rowInvoice("InvoiceNumber").ToString]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="in_Status">["Queued"]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="in_ExceptionType">[""]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="in_Reason">[""]</InArgument>
+                        <InArgument x:TypeArguments="x:String" x:Key="in_JournalId">[""]</InArgument>
+                      </ui:InvokeWorkflowFile.Arguments>
+                    </ui:InvokeWorkflowFile>
+                  </Sequence>
+                </TryCatch.Try>
+                <TryCatch.Catches>
+                  <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_1">
+                    <ActivityAction x:TypeArguments="s:Exception">
+                      <ActivityAction.Argument>
+                        <DelegateInArgument x:TypeArguments="s:Exception" Name="exQueue"/>
+                      </ActivityAction.Argument>
+                      <If Condition="[exQueue.Message.IndexOf(&quot;unique&quot;, StringComparison.OrdinalIgnoreCase) &gt;= 0 OrElse exQueue.Message.IndexOf(&quot;duplicate&quot;, StringComparison.OrdinalIgnoreCase) &gt;= 0]" DisplayName="If Duplicate Reference" sap2010:WorkflowViewState.IdRef="If_1">
+                        <If.Then>
+                          <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_1">
+                            <sap:WorkflowViewStateService.ViewState>
+                              <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                              </scg:Dictionary>
+                            </sap:WorkflowViewStateService.ViewState>
+                            <Assign DisplayName="Count Duplicate" sap2010:WorkflowViewState.IdRef="Assign_2">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:Int32">[intDuplicates]</OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:Int32">[intDuplicates + 1]</InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <ui:LogMessage DisplayName="Log Duplicate Reference" Level="Warn" Message="[&quot;Invoice &quot; + rowInvoice(&quot;InvoiceNumber&quot;).ToString + &quot; is already in the queue (unique reference). Skipped.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1"/>
+                            <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Report Duplicate" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_2" UnSafe="False" WorkflowFileName="Reporting\WriteRunReport.xaml">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_ReportPath">[strReportPath]</InArgument>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_Reference">[rowInvoice("InvoiceNumber").ToString]</InArgument>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_Status">["Duplicate"]</InArgument>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_ExceptionType">["Business"]</InArgument>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_Reason">["Already in queue " + Config("OrchestratorQueueName").ToString + " (unique reference)."]</InArgument>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_JournalId">[""]</InArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                          </Sequence>
+                        </If.Then>
+                        <If.Else>
+                          <Sequence DisplayName="Else" sap2010:WorkflowViewState.IdRef="Sequence_2">
+                            <sap:WorkflowViewStateService.ViewState>
+                              <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                              </scg:Dictionary>
+                            </sap:WorkflowViewStateService.ViewState>
+                            <ui:LogMessage DisplayName="Log Queue Failure" Level="Error" Message="[&quot;Could not queue invoice &quot; + rowInvoice(&quot;InvoiceNumber&quot;).ToString + &quot;: &quot; + exQueue.Message]" sap2010:WorkflowViewState.IdRef="LogMessage_2"/>
+                            <Rethrow DisplayName="Rethrow Queue Failure" sap2010:WorkflowViewState.IdRef="Rethrow_1"/>
+                          </Sequence>
+                        </If.Else>
+                      </If>
+                    </ActivityAction>
+                  </Catch>
+                </TryCatch.Catches>
+              </TryCatch>
+            </ActivityAction>
+          </ui:ForEachRow.Body>
+        </ui:ForEachRow>
+      </If.Then>
+      <If.Else>
+        <ui:LogMessage DisplayName="Log Local Mode" Level="Warn" Message="[&quot;RunMode is Local, so no queue items were created. Main.xaml reads the invoice file directly in Local mode. Set RunMode = Orchestrator in Data\Config.xlsx to use the queue.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_4"/>
+      </If.Else>
+    </If>
+    <ui:LogMessage DisplayName="Log Dispatcher Summary" Level="Info" Message="[&quot;Dispatcher finished. Valid: &quot; + dtInvoices.Rows.Count.ToString + &quot;, queued: &quot; + intQueued.ToString + &quot;, already in queue: &quot; + intDuplicates.ToString + &quot;, rejected/duplicate rows: &quot; + dtRejected.Rows.Count.ToString + &quot;. Report: &quot; + strReportPath]" sap2010:WorkflowViewState.IdRef="LogMessage_5"/>
+  </Sequence>
+</Activity>
