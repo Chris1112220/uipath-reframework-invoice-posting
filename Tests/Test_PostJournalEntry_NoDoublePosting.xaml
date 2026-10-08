@@ -1,0 +1,128 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uta="clr-namespace:UiPath.Testing.Activities;assembly=UiPath.Testing.Activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="Test_PostJournalEntry_NoDoublePosting">
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="17">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+      <x:String>UiPath.Testing.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="18">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Testing.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Test - PostJournalEntry - No Double Posting" sap2010:WorkflowViewState.IdRef="Sequence_4">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="strTempLedger"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtLines"/>
+      <Variable x:TypeArguments="x:String" Name="strJournalId"/>
+      <Variable x:TypeArguments="x:Boolean" Name="blnFirstAlreadyPosted"/>
+      <Variable x:TypeArguments="x:Boolean" Name="blnSecondAlreadyPosted"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtLedger"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Test Purpose" Text="Posts the same journal twice to a temp ledger. The second call must be skipped, which is what keeps a REFramework retry from posting an invoice twice." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <Sequence DisplayName="Given" sap2010:WorkflowViewState.IdRef="Sequence_1">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
+      <Assign DisplayName="Temp Ledger Path" sap2010:WorkflowViewState.IdRef="Assign_1">
+        <Assign.To>
+          <OutArgument x:TypeArguments="x:String">[strTempLedger]</OutArgument>
+        </Assign.To>
+        <Assign.Value>
+          <InArgument x:TypeArguments="x:String">[Path.Combine(Path.GetTempPath, "InvoicePostingBot_Test_" + Guid.NewGuid.ToString("N") + ".xlsx")]</InArgument>
+        </Assign.Value>
+      </Assign>
+      <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Build Journal Lines" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_1" UnSafe="False" WorkflowFileName="Processing\BuildJournalEntry.xaml">
+        <ui:InvokeWorkflowFile.Arguments>
+          <InArgument x:TypeArguments="x:String" x:Key="in_InvoiceNumber">["INV-T100"]</InArgument>
+          <InArgument x:TypeArguments="s:DateTime" x:Key="in_InvoiceDate">[New DateTime(2026, 9, 1)]</InArgument>
+          <InArgument x:TypeArguments="s:DateTime" x:Key="in_PostingDate">[New DateTime(2026, 9, 30)]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_VendorId">["V001"]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_VendorName">["Northwind Supply Co."]</InArgument>
+          <InArgument x:TypeArguments="x:Decimal" x:Key="in_Amount">[1250.50D]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_ExpenseGL">["6100-00"]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_APAccount">["2000-00"]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_JournalPrefix">["AP"]</InArgument>
+          <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_JournalLines">[dtLines]</OutArgument>
+          <OutArgument x:TypeArguments="x:String" x:Key="out_JournalId">[strJournalId]</OutArgument>
+        </ui:InvokeWorkflowFile.Arguments>
+      </ui:InvokeWorkflowFile>
+    </Sequence>
+    <Sequence DisplayName="When" sap2010:WorkflowViewState.IdRef="Sequence_2">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
+      <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Post First Time" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_2" UnSafe="False" WorkflowFileName="Posting\PostJournalEntry.xaml">
+        <ui:InvokeWorkflowFile.Arguments>
+          <InArgument x:TypeArguments="sd:DataTable" x:Key="in_JournalLines">[dtLines]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_JournalId">[strJournalId]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_JournalOutputPath">[strTempLedger]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_SheetName">["JournalEntries"]</InArgument>
+          <OutArgument x:TypeArguments="x:Boolean" x:Key="out_AlreadyPosted">[blnFirstAlreadyPosted]</OutArgument>
+        </ui:InvokeWorkflowFile.Arguments>
+      </ui:InvokeWorkflowFile>
+      <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Post Again (Simulated Retry)" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_3" UnSafe="False" WorkflowFileName="Posting\PostJournalEntry.xaml">
+        <ui:InvokeWorkflowFile.Arguments>
+          <InArgument x:TypeArguments="sd:DataTable" x:Key="in_JournalLines">[dtLines]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_JournalId">[strJournalId]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_JournalOutputPath">[strTempLedger]</InArgument>
+          <InArgument x:TypeArguments="x:String" x:Key="in_SheetName">["JournalEntries"]</InArgument>
+          <OutArgument x:TypeArguments="x:Boolean" x:Key="out_AlreadyPosted">[blnSecondAlreadyPosted]</OutArgument>
+        </ui:InvokeWorkflowFile.Arguments>
+      </ui:InvokeWorkflowFile>
+    </Sequence>
+    <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_3">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
+      <ui:ReadRange AddHeaders="True" DataTable="[dtLedger]" DisplayName="Read Temp Ledger" Range="{x:Null}" SheetName="[&quot;JournalEntries&quot;]" WorkbookPath="[strTempLedger]" sap2010:WorkflowViewState.IdRef="ReadRange_1"/>
+      <uta:VerifyExpression ContinueOnFailure="True" DisplayName="Verify First Post Wrote" Expression="[Not blnFirstAlreadyPosted]" OutputMessageFormat="[&quot;First post should write the journal.&quot;]" sap2010:WorkflowViewState.IdRef="VerifyExpression_1"/>
+      <uta:VerifyExpression ContinueOnFailure="True" DisplayName="Verify Second Post Skipped" Expression="[blnSecondAlreadyPosted]" OutputMessageFormat="[&quot;Second post should detect the existing JournalId.&quot;]" sap2010:WorkflowViewState.IdRef="VerifyExpression_2"/>
+      <uta:VerifyExpression ContinueOnFailure="True" DisplayName="Verify No Duplicate Lines" Expression="[dtLedger.Rows.Count = 2]" OutputMessageFormat="[&quot;Ledger should hold exactly 2 lines. Actual: &quot; + dtLedger.Rows.Count.ToString]" sap2010:WorkflowViewState.IdRef="VerifyExpression_3"/>
+    </Sequence>
+  </Sequence>
+</Activity>

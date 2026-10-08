@@ -1,0 +1,193 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uta="clr-namespace:UiPath.Testing.Activities;assembly=UiPath.Testing.Activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="Test_ValidateInvoice_DataDriven">
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="17">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+      <x:String>UiPath.Testing.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="18">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Testing.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Test - ValidateInvoice - Data Driven" sap2010:WorkflowViewState.IdRef="Sequence_6">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtVendors"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtPurchaseOrders"/>
+      <Variable x:TypeArguments="x:String" Name="strVendorName"/>
+      <Variable x:TypeArguments="x:String" Name="strExpenseGL"/>
+      <Variable x:TypeArguments="x:Boolean" Default="False" Name="blnBusinessException"/>
+      <Variable x:TypeArguments="x:String" Default="[&quot;&quot;]" Name="strMessage"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtCases"/>
+      <Variable x:TypeArguments="x:Boolean" Name="blnCasePassed"/>
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="intFailedCases"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Test Purpose" Text="Runs every row of Tests\TestData\ValidateInvoice_Cases.xlsx through ValidateInvoice.xaml, including tolerance boundaries (exactly 2% passes, 2.03% fails). Add a row to add a case." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <Sequence DisplayName="Given" sap2010:WorkflowViewState.IdRef="Sequence_3">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
+      <ui:ReadRange AddHeaders="True" DataTable="[dtVendors]" DisplayName="Read Vendor Master" Range="{x:Null}" SheetName="[&quot;Vendors&quot;]" WorkbookPath="[&quot;Data\Input\VendorMaster.xlsx&quot;]" sap2010:WorkflowViewState.IdRef="ReadRange_1"/>
+      <ui:ReadRange AddHeaders="True" DataTable="[dtPurchaseOrders]" DisplayName="Read Purchase Orders" Range="{x:Null}" SheetName="[&quot;PurchaseOrders&quot;]" WorkbookPath="[&quot;Data\Input\PurchaseOrders.xlsx&quot;]" sap2010:WorkflowViewState.IdRef="ReadRange_2"/>
+      <ui:ReadRange AddHeaders="True" DataTable="[dtCases]" DisplayName="Read Test Cases" Range="{x:Null}" SheetName="[&quot;Cases&quot;]" WorkbookPath="[&quot;Tests\TestData\ValidateInvoice_Cases.xlsx&quot;]" sap2010:WorkflowViewState.IdRef="ReadRange_3"/>
+    </Sequence>
+    <Sequence DisplayName="When" sap2010:WorkflowViewState.IdRef="Sequence_4">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
+      <ui:ForEachRow CurrentIndex="{x:Null}" DataTable="[dtCases]" DisplayName="For Each Test Case" sap2010:WorkflowViewState.IdRef="ForEachRow_1">
+        <ui:ForEachRow.Body>
+          <ActivityAction x:TypeArguments="sd:DataRow">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="sd:DataRow" Name="rowCase"/>
+            </ActivityAction.Argument>
+            <Sequence DisplayName="Validate Case" sap2010:WorkflowViewState.IdRef="Sequence_2">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+              <Assign DisplayName="Reset Flag" sap2010:WorkflowViewState.IdRef="Assign_1">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Boolean">[blnBusinessException]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Boolean">[False]</InArgument>
+                </Assign.Value>
+              </Assign>
+              <Assign DisplayName="Reset Message" sap2010:WorkflowViewState.IdRef="Assign_2">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:String">[strMessage]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:String">[""]</InArgument>
+                </Assign.Value>
+              </Assign>
+              <TryCatch DisplayName="Try Validate Case" sap2010:WorkflowViewState.IdRef="TryCatch_1">
+                <TryCatch.Try>
+                  <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Invoke ValidateInvoice (Case)" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_1" UnSafe="False" WorkflowFileName="Processing\ValidateInvoice.xaml">
+                    <ui:InvokeWorkflowFile.Arguments>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_InvoiceNumber">[rowCase("CaseId").ToString]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_VendorId">[rowCase("VendorId").ToString]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_PONumber">[rowCase("PONumber").ToString]</InArgument>
+                      <InArgument x:TypeArguments="x:Decimal" x:Key="in_Amount">[Convert.ToDecimal(rowCase("Amount"), CultureInfo.InvariantCulture)]</InArgument>
+                      <InArgument x:TypeArguments="sd:DataTable" x:Key="in_VendorMaster">[dtVendors]</InArgument>
+                      <InArgument x:TypeArguments="sd:DataTable" x:Key="in_PurchaseOrders">[dtPurchaseOrders]</InArgument>
+                      <InArgument x:TypeArguments="x:Decimal" x:Key="in_TolerancePercent">[2D]</InArgument>
+                      <InArgument x:TypeArguments="x:Decimal" x:Key="in_MaxAutoPostAmount">[25000D]</InArgument>
+                      <OutArgument x:TypeArguments="x:String" x:Key="out_VendorName">[strVendorName]</OutArgument>
+                      <OutArgument x:TypeArguments="x:String" x:Key="out_ExpenseGL">[strExpenseGL]</OutArgument>
+                    </ui:InvokeWorkflowFile.Arguments>
+                  </ui:InvokeWorkflowFile>
+                </TryCatch.Try>
+                <TryCatch.Catches>
+                  <Catch x:TypeArguments="ui:BusinessRuleException" sap2010:WorkflowViewState.IdRef="Catch`1_1">
+                    <ActivityAction x:TypeArguments="ui:BusinessRuleException">
+                      <ActivityAction.Argument>
+                        <DelegateInArgument x:TypeArguments="ui:BusinessRuleException" Name="exBusiness"/>
+                      </ActivityAction.Argument>
+                      <Sequence DisplayName="Handle exBusiness" sap2010:WorkflowViewState.IdRef="Sequence_1">
+                        <sap:WorkflowViewStateService.ViewState>
+                          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                          </scg:Dictionary>
+                        </sap:WorkflowViewStateService.ViewState>
+                        <Assign DisplayName="Flag Business Exception" sap2010:WorkflowViewState.IdRef="Assign_3">
+                          <Assign.To>
+                            <OutArgument x:TypeArguments="x:Boolean">[blnBusinessException]</OutArgument>
+                          </Assign.To>
+                          <Assign.Value>
+                            <InArgument x:TypeArguments="x:Boolean">[True]</InArgument>
+                          </Assign.Value>
+                        </Assign>
+                        <Assign DisplayName="Capture Message" sap2010:WorkflowViewState.IdRef="Assign_4">
+                          <Assign.To>
+                            <OutArgument x:TypeArguments="x:String">[strMessage]</OutArgument>
+                          </Assign.To>
+                          <Assign.Value>
+                            <InArgument x:TypeArguments="x:String">[exBusiness.Message]</InArgument>
+                          </Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </ActivityAction>
+                  </Catch>
+                </TryCatch.Catches>
+              </TryCatch>
+              <Assign DisplayName="Evaluate Case" sap2010:WorkflowViewState.IdRef="Assign_5">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Boolean">[blnCasePassed]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Boolean">[If(rowCase("ExpectedResult").ToString = "Pass", Not blnBusinessException, blnBusinessException AndAlso strMessage.IndexOf(rowCase("ExpectedMessageContains").ToString, StringComparison.OrdinalIgnoreCase) &gt;= 0)]</InArgument>
+                </Assign.Value>
+              </Assign>
+              <If Condition="[Not blnCasePassed]" DisplayName="If Case Failed" sap2010:WorkflowViewState.IdRef="If_1">
+                <If.Then>
+                  <Assign DisplayName="Count Failure" sap2010:WorkflowViewState.IdRef="Assign_6">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="x:Int32">[intFailedCases]</OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="x:Int32">[intFailedCases + 1]</InArgument>
+                    </Assign.Value>
+                  </Assign>
+                </If.Then>
+              </If>
+              <uta:VerifyExpression ContinueOnFailure="True" DisplayName="Verify Case" Expression="[blnCasePassed]" OutputMessageFormat="[&quot;Case &quot; + rowCase(&quot;CaseId&quot;).ToString + &quot;: expected &quot; + rowCase(&quot;ExpectedResult&quot;).ToString + &quot; (&quot; + rowCase(&quot;ExpectedMessageContains&quot;).ToString + &quot;), got &quot; + If(blnBusinessException, &quot;BusinessRuleException: &quot; + strMessage, &quot;Pass&quot;)]" sap2010:WorkflowViewState.IdRef="VerifyExpression_1"/>
+            </Sequence>
+          </ActivityAction>
+        </ui:ForEachRow.Body>
+      </ui:ForEachRow>
+    </Sequence>
+    <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_5">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
+      <uta:VerifyExpression ContinueOnFailure="True" DisplayName="Verify All Cases Passed" Expression="[intFailedCases = 0]" OutputMessageFormat="[intFailedCases.ToString + &quot; of &quot; + dtCases.Rows.Count.ToString + &quot; data-driven cases failed.&quot;]" sap2010:WorkflowViewState.IdRef="VerifyExpression_2"/>
+    </Sequence>
+  </Sequence>
+</Activity>
