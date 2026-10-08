@@ -1,0 +1,157 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="Process">
+  <x:Members>
+    <x:Property Name="in_TransactionItem" Type="InArgument(ui:QueueItem)"/>
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))"/>
+    <x:Property Name="in_VendorMaster" Type="InArgument(sd:DataTable)"/>
+    <x:Property Name="in_PurchaseOrders" Type="InArgument(sd:DataTable)"/>
+    <x:Property Name="out_JournalId" Type="OutArgument(x:String)"/>
+  </x:Members>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="16">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="17">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Process Transaction" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="strInvoiceNumber"/>
+      <Variable x:TypeArguments="x:String" Name="strVendorId"/>
+      <Variable x:TypeArguments="x:String" Name="strPONumber"/>
+      <Variable x:TypeArguments="x:String" Name="strVendorName"/>
+      <Variable x:TypeArguments="x:String" Name="strExpenseGL"/>
+      <Variable x:TypeArguments="x:Decimal" Name="decAmount"/>
+      <Variable x:TypeArguments="s:DateTime" Name="dtmInvoiceDate"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtJournalLines"/>
+      <Variable x:TypeArguments="x:Boolean" Name="blnAlreadyPosted"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Purpose" Text="One invoice per transaction: validate (BusinessRuleException on bad data) -&gt; build a balanced journal entry -&gt; post it to the simulated ERP." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <Assign DisplayName="01 - Get Invoice Number" sap2010:WorkflowViewState.IdRef="Assign_1">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">[strInvoiceNumber]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[in_TransactionItem.SpecificContent("InvoiceNumber").ToString.Trim]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="02 - Get Vendor Id" sap2010:WorkflowViewState.IdRef="Assign_2">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">[strVendorId]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[in_TransactionItem.SpecificContent("VendorId").ToString.Trim]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="03 - Get PO Number" sap2010:WorkflowViewState.IdRef="Assign_3">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">[strPONumber]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[If(in_TransactionItem.SpecificContent.ContainsKey("PONumber"), Convert.ToString(in_TransactionItem.SpecificContent("PONumber")), "").Trim]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="04 - Get Amount" sap2010:WorkflowViewState.IdRef="Assign_4">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Decimal">[decAmount]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Decimal">[Convert.ToDecimal(in_TransactionItem.SpecificContent("Amount"), CultureInfo.InvariantCulture)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="05 - Get Invoice Date" sap2010:WorkflowViewState.IdRef="Assign_5">
+      <Assign.To>
+        <OutArgument x:TypeArguments="s:DateTime">[dtmInvoiceDate]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="s:DateTime">[DateTime.ParseExact(in_TransactionItem.SpecificContent("InvoiceDate").ToString, "yyyy-MM-dd", CultureInfo.InvariantCulture)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <ui:LogMessage DisplayName="Log Validating" Level="Info" Message="[&quot;Validating invoice &quot; + strInvoiceNumber + &quot; (vendor &quot; + strVendorId + &quot;, PO &quot; + strPONumber + &quot;, amount &quot; + decAmount.ToString(&quot;N2&quot;, CultureInfo.InvariantCulture) + &quot;).&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1"/>
+    <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="06 - Validate Invoice" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_1" UnSafe="False" WorkflowFileName="Processing\ValidateInvoice.xaml">
+      <ui:InvokeWorkflowFile.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_InvoiceNumber">[strInvoiceNumber]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_VendorId">[strVendorId]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_PONumber">[strPONumber]</InArgument>
+        <InArgument x:TypeArguments="x:Decimal" x:Key="in_Amount">[decAmount]</InArgument>
+        <InArgument x:TypeArguments="sd:DataTable" x:Key="in_VendorMaster">[in_VendorMaster]</InArgument>
+        <InArgument x:TypeArguments="sd:DataTable" x:Key="in_PurchaseOrders">[in_PurchaseOrders]</InArgument>
+        <InArgument x:TypeArguments="x:Decimal" x:Key="in_TolerancePercent">[Convert.ToDecimal(in_Config("MatchTolerancePercent"), CultureInfo.InvariantCulture)]</InArgument>
+        <InArgument x:TypeArguments="x:Decimal" x:Key="in_MaxAutoPostAmount">[Convert.ToDecimal(in_Config("MaxAutoPostAmount"), CultureInfo.InvariantCulture)]</InArgument>
+        <OutArgument x:TypeArguments="x:String" x:Key="out_VendorName">[strVendorName]</OutArgument>
+        <OutArgument x:TypeArguments="x:String" x:Key="out_ExpenseGL">[strExpenseGL]</OutArgument>
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
+    <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="07 - Build Journal Entry" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_2" UnSafe="False" WorkflowFileName="Processing\BuildJournalEntry.xaml">
+      <ui:InvokeWorkflowFile.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_InvoiceNumber">[strInvoiceNumber]</InArgument>
+        <InArgument x:TypeArguments="s:DateTime" x:Key="in_InvoiceDate">[dtmInvoiceDate]</InArgument>
+        <InArgument x:TypeArguments="s:DateTime" x:Key="in_PostingDate">[DateTime.Today]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_VendorId">[strVendorId]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_VendorName">[strVendorName]</InArgument>
+        <InArgument x:TypeArguments="x:Decimal" x:Key="in_Amount">[decAmount]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_ExpenseGL">[strExpenseGL]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_APAccount">[in_Config("APAccount").ToString]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_JournalPrefix">[in_Config("JournalPrefix").ToString]</InArgument>
+        <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_JournalLines">[dtJournalLines]</OutArgument>
+        <OutArgument x:TypeArguments="x:String" x:Key="out_JournalId">[out_JournalId]</OutArgument>
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
+    <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="08 - Post Journal Entry" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_3" UnSafe="False" WorkflowFileName="Posting\PostJournalEntry.xaml">
+      <ui:InvokeWorkflowFile.Arguments>
+        <InArgument x:TypeArguments="sd:DataTable" x:Key="in_JournalLines">[dtJournalLines]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_JournalId">[out_JournalId]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_JournalOutputPath">[in_Config("JournalOutputPath").ToString]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_SheetName">[in_Config("JournalSheetName").ToString]</InArgument>
+        <OutArgument x:TypeArguments="x:Boolean" x:Key="out_AlreadyPosted">[blnAlreadyPosted]</OutArgument>
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
+    <If Condition="[blnAlreadyPosted]" DisplayName="If Already Posted" sap2010:WorkflowViewState.IdRef="If_1">
+      <If.Then>
+        <ui:LogMessage DisplayName="Log Already Posted" Level="Warn" Message="[&quot;Journal &quot; + out_JournalId + &quot; was already in the ledger (retry after a partial run), so it was not posted again.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_2"/>
+      </If.Then>
+      <If.Else>
+        <ui:LogMessage DisplayName="Log Posted" Level="Info" Message="[&quot;Posted journal &quot; + out_JournalId + &quot;: Dr &quot; + strExpenseGL + &quot; / Cr &quot; + in_Config(&quot;APAccount&quot;).ToString + &quot; &quot; + decAmount.ToString(&quot;N2&quot;, CultureInfo.InvariantCulture) + &quot;.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_3"/>
+      </If.Else>
+    </If>
+  </Sequence>
+</Activity>

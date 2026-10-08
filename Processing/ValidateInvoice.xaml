@@ -1,0 +1,191 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="ValidateInvoice">
+  <x:Members>
+    <x:Property Name="in_InvoiceNumber" Type="InArgument(x:String)"/>
+    <x:Property Name="in_VendorId" Type="InArgument(x:String)"/>
+    <x:Property Name="in_PONumber" Type="InArgument(x:String)"/>
+    <x:Property Name="in_Amount" Type="InArgument(x:Decimal)"/>
+    <x:Property Name="in_VendorMaster" Type="InArgument(sd:DataTable)"/>
+    <x:Property Name="in_PurchaseOrders" Type="InArgument(sd:DataTable)"/>
+    <x:Property Name="in_TolerancePercent" Type="InArgument(x:Decimal)"/>
+    <x:Property Name="in_MaxAutoPostAmount" Type="InArgument(x:Decimal)"/>
+    <x:Property Name="out_VendorName" Type="OutArgument(x:String)"/>
+    <x:Property Name="out_ExpenseGL" Type="OutArgument(x:String)"/>
+  </x:Members>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="16">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="17">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Validate Invoice" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataRow[]" Name="arrVendor"/>
+      <Variable x:TypeArguments="sd:DataRow" Name="drVendor"/>
+      <Variable x:TypeArguments="sd:DataRow[]" Name="arrPO"/>
+      <Variable x:TypeArguments="sd:DataRow" Name="drPO"/>
+      <Variable x:TypeArguments="x:Decimal" Name="decPOAmount"/>
+      <Variable x:TypeArguments="x:Decimal" Name="decReceived"/>
+      <Variable x:TypeArguments="x:Decimal" Name="decVariancePct"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Purpose" Text="Business rules only. Failures throw BusinessRuleException so REFramework marks the transaction Failed (Business) and moves on. Order: amount -&gt; vendor -&gt; PO -&gt; invoice-to-PO variance -&gt; 3-way match (received) -&gt; auto-post limit." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <If Condition="[in_Amount &lt;= 0D]" DisplayName="01 - Amount &gt; 0" sap2010:WorkflowViewState.IdRef="If_1">
+      <If.Then>
+        <Throw DisplayName="Throw Negative Or Zero Amount" Exception="[New BusinessRuleException(&quot;Invoice amount must be greater than zero (found &quot; + in_Amount.ToString(&quot;N2&quot;, CultureInfo.InvariantCulture) + &quot;).&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_1"/>
+      </If.Then>
+    </If>
+    <Assign DisplayName="02 - Look Up Vendor" sap2010:WorkflowViewState.IdRef="Assign_1">
+      <Assign.To>
+        <OutArgument x:TypeArguments="sd:DataRow[]">[arrVendor]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="sd:DataRow[]">[in_VendorMaster.Rows.Cast(Of DataRow)().Where(Function(r) Convert.ToString(r("VendorId")).Trim.Equals(in_VendorId.Trim, StringComparison.OrdinalIgnoreCase)).ToArray()]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[arrVendor.Length = 0]" DisplayName="If Unknown Vendor" sap2010:WorkflowViewState.IdRef="If_2">
+      <If.Then>
+        <Throw DisplayName="Throw Unknown Vendor" Exception="[New BusinessRuleException(&quot;Unknown vendor: &quot; + in_VendorId + &quot; is not in the vendor master.&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_2"/>
+      </If.Then>
+    </If>
+    <Assign DisplayName="03 - Get Vendor Row" sap2010:WorkflowViewState.IdRef="Assign_2">
+      <Assign.To>
+        <OutArgument x:TypeArguments="sd:DataRow">[drVendor]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="sd:DataRow">[arrVendor(0)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[Not drVendor(&quot;Status&quot;).ToString.Equals(&quot;Active&quot;, StringComparison.OrdinalIgnoreCase)]" DisplayName="If Vendor Inactive" sap2010:WorkflowViewState.IdRef="If_3">
+      <If.Then>
+        <Throw DisplayName="Throw Inactive Vendor" Exception="[New BusinessRuleException(&quot;Vendor &quot; + in_VendorId + &quot; (&quot; + drVendor(&quot;VendorName&quot;).ToString + &quot;) is inactive.&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_3"/>
+      </If.Then>
+    </If>
+    <Assign DisplayName="04 - Set Vendor Name" sap2010:WorkflowViewState.IdRef="Assign_3">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">[out_VendorName]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[drVendor("VendorName").ToString]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="05 - Set Expense GL" sap2010:WorkflowViewState.IdRef="Assign_4">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">[out_ExpenseGL]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[drVendor("DefaultExpenseGL").ToString]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[String.IsNullOrWhiteSpace(in_PONumber)]" DisplayName="06 - PO Present" sap2010:WorkflowViewState.IdRef="If_4">
+      <If.Then>
+        <Throw DisplayName="Throw Missing PO" Exception="[New BusinessRuleException(&quot;Missing PO number. Non-PO invoices need manual approval.&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_4"/>
+      </If.Then>
+    </If>
+    <Assign DisplayName="07 - Look Up PO" sap2010:WorkflowViewState.IdRef="Assign_5">
+      <Assign.To>
+        <OutArgument x:TypeArguments="sd:DataRow[]">[arrPO]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="sd:DataRow[]">[in_PurchaseOrders.Rows.Cast(Of DataRow)().Where(Function(r) Convert.ToString(r("PONumber")).Trim.Equals(in_PONumber.Trim, StringComparison.OrdinalIgnoreCase)).ToArray()]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[arrPO.Length = 0]" DisplayName="If PO Not Found" sap2010:WorkflowViewState.IdRef="If_5">
+      <If.Then>
+        <Throw DisplayName="Throw PO Not Found" Exception="[New BusinessRuleException(&quot;PO &quot; + in_PONumber + &quot; was not found in the open purchase orders.&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_5"/>
+      </If.Then>
+    </If>
+    <Assign DisplayName="08 - Get PO Row" sap2010:WorkflowViewState.IdRef="Assign_6">
+      <Assign.To>
+        <OutArgument x:TypeArguments="sd:DataRow">[drPO]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="sd:DataRow">[arrPO(0)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[Not drPO(&quot;VendorId&quot;).ToString.Equals(in_VendorId, StringComparison.OrdinalIgnoreCase)]" DisplayName="If PO Vendor Mismatch" sap2010:WorkflowViewState.IdRef="If_6">
+      <If.Then>
+        <Throw DisplayName="Throw PO Vendor Mismatch" Exception="[New BusinessRuleException(&quot;PO &quot; + in_PONumber + &quot; belongs to vendor &quot; + drPO(&quot;VendorId&quot;).ToString + &quot;, not &quot; + in_VendorId + &quot;.&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_6"/>
+      </If.Then>
+    </If>
+    <Assign DisplayName="09 - Get PO Amount" sap2010:WorkflowViewState.IdRef="Assign_7">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Decimal">[decPOAmount]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Decimal">[Convert.ToDecimal(drPO("POAmount"), CultureInfo.InvariantCulture)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="10 - Get Received Amount" sap2010:WorkflowViewState.IdRef="Assign_8">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Decimal">[decReceived]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Decimal">[Convert.ToDecimal(drPO("ReceivedAmount"), CultureInfo.InvariantCulture)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="11 - Compute Variance %" sap2010:WorkflowViewState.IdRef="Assign_9">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Decimal">[decVariancePct]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Decimal">[If(decPOAmount = 0D, 100D, Math.Abs(in_Amount - decPOAmount) / decPOAmount * 100D)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[decVariancePct &gt; in_TolerancePercent]" DisplayName="12 - Within Tolerance" sap2010:WorkflowViewState.IdRef="If_7">
+      <If.Then>
+        <Throw DisplayName="Throw Over Tolerance" Exception="[New BusinessRuleException(&quot;Invoice-to-PO variance &quot; + decVariancePct.ToString(&quot;0.00&quot;, CultureInfo.InvariantCulture) + &quot;% exceeds the &quot; + in_TolerancePercent.ToString(&quot;0.##&quot;, CultureInfo.InvariantCulture) + &quot;% tolerance.&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_7"/>
+      </If.Then>
+    </If>
+    <If Condition="[in_Amount &gt; decReceived * (1D + in_TolerancePercent / 100D)]" DisplayName="13 - 3-Way Match" sap2010:WorkflowViewState.IdRef="If_8">
+      <If.Then>
+        <Throw DisplayName="Throw 3-Way Match Failed" Exception="[New BusinessRuleException(&quot;3-way match failed: invoice exceeds goods received.&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_8"/>
+      </If.Then>
+    </If>
+    <If Condition="[in_Amount &gt; in_MaxAutoPostAmount]" DisplayName="14 - Auto-Post Limit" sap2010:WorkflowViewState.IdRef="If_9">
+      <If.Then>
+        <Throw DisplayName="Throw Over Auto-Post Limit" Exception="[New BusinessRuleException(&quot;Amount exceeds the auto-post limit; route for manual approval.&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_9"/>
+      </If.Then>
+    </If>
+    <ui:LogMessage DisplayName="Log Validated" Level="Info" Message="[&quot;Invoice &quot; + in_InvoiceNumber + &quot; passed validation (expense GL &quot; + out_ExpenseGL + &quot;).&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1"/>
+  </Sequence>
+</Activity>

@@ -1,0 +1,112 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="InitAllApplications">
+  <x:Members>
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))"/>
+    <x:Property Name="out_VendorMaster" Type="OutArgument(sd:DataTable)"/>
+    <x:Property Name="out_PurchaseOrders" Type="OutArgument(sd:DataTable)"/>
+  </x:Members>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="16">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="17">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Initialize All Applications" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="strVendorPath"/>
+      <Variable x:TypeArguments="x:String" Name="strPOPath"/>
+      <Variable x:TypeArguments="x:Object" Name="objIgnored"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Purpose" Text="This bot posts to a simulated ERP (an Excel journal), so &quot;applications&quot; are the reference files it depends on. In a UI-based process this is where you would open and log in to the ERP; a failure here is a system exception and triggers the REFramework retry path." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <Assign DisplayName="Set Vendor Master Path" sap2010:WorkflowViewState.IdRef="Assign_1">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">[strVendorPath]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[in_Config("VendorMasterPath").ToString]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Set Purchase Orders Path" sap2010:WorkflowViewState.IdRef="Assign_2">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">[strPOPath]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[in_Config("PurchaseOrdersPath").ToString]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[Not File.Exists(strVendorPath)]" DisplayName="If Vendor Master Missing" sap2010:WorkflowViewState.IdRef="If_1">
+      <If.Then>
+        <Throw DisplayName="Throw Vendor Master Missing" Exception="[New FileNotFoundException(&quot;Vendor master not found: &quot; + strVendorPath, strVendorPath)]" sap2010:WorkflowViewState.IdRef="Throw_1"/>
+      </If.Then>
+    </If>
+    <If Condition="[Not File.Exists(strPOPath)]" DisplayName="If PO File Missing" sap2010:WorkflowViewState.IdRef="If_2">
+      <If.Then>
+        <Throw DisplayName="Throw PO File Missing" Exception="[New FileNotFoundException(&quot;Purchase order file not found: &quot; + strPOPath, strPOPath)]" sap2010:WorkflowViewState.IdRef="Throw_2"/>
+      </If.Then>
+    </If>
+    <ui:ReadRange AddHeaders="True" DataTable="[out_VendorMaster]" DisplayName="Read Vendor Master" Range="{x:Null}" SheetName="[in_Config(&quot;VendorSheetName&quot;).ToString]" WorkbookPath="[strVendorPath]" sap2010:WorkflowViewState.IdRef="ReadRange_1"/>
+    <ui:ReadRange AddHeaders="True" DataTable="[out_PurchaseOrders]" DisplayName="Read Purchase Orders" Range="{x:Null}" SheetName="[in_Config(&quot;PurchaseOrderSheetName&quot;).ToString]" WorkbookPath="[strPOPath]" sap2010:WorkflowViewState.IdRef="ReadRange_2"/>
+    <If Condition="[out_VendorMaster.Rows.Count = 0 OrElse out_PurchaseOrders.Rows.Count = 0]" DisplayName="If Reference Data Empty" sap2010:WorkflowViewState.IdRef="If_3">
+      <If.Then>
+        <Throw DisplayName="Throw Empty Reference Data" Exception="[New InvalidDataException(&quot;Vendor master or purchase order file is empty.&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_3"/>
+      </If.Then>
+    </If>
+    <Assign DisplayName="Ensure Journal Output Folder" sap2010:WorkflowViewState.IdRef="Assign_3">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Object">[objIgnored]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Object">[Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(in_Config("JournalOutputPath").ToString)))]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Ensure Run Report Folder" sap2010:WorkflowViewState.IdRef="Assign_4">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Object">[objIgnored]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Object">[Directory.CreateDirectory(in_Config("RunReportFolder").ToString)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <ui:LogMessage DisplayName="Log Reference Data" Level="Info" Message="[&quot;Reference data loaded: &quot; + out_VendorMaster.Rows.Count.ToString + &quot; vendors, &quot; + out_PurchaseOrders.Rows.Count.ToString + &quot; purchase orders.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1"/>
+  </Sequence>
+</Activity>

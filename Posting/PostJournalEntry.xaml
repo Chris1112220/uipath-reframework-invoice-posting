@@ -1,0 +1,140 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="PostJournalEntry">
+  <x:Members>
+    <x:Property Name="in_JournalLines" Type="InArgument(sd:DataTable)"/>
+    <x:Property Name="in_JournalId" Type="InArgument(x:String)"/>
+    <x:Property Name="in_JournalOutputPath" Type="InArgument(x:String)"/>
+    <x:Property Name="in_SheetName" Type="InArgument(x:String)"/>
+    <x:Property Name="out_AlreadyPosted" Type="OutArgument(x:Boolean)"/>
+  </x:Members>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="16">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="17">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Post Journal Entry" sap2010:WorkflowViewState.IdRef="Sequence_4">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtExisting"/>
+      <Variable x:TypeArguments="x:Boolean" Default="False" Name="blnWroteNewFile"/>
+      <Variable x:TypeArguments="x:Object" Name="objIgnored"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Purpose" Text="Simulated ERP: journal lines are appended to Data\Output\JournalEntries.xlsx. If the JournalId already exists the lines are skipped so a REFramework retry after a partial run cannot post twice. A real ERP post would go here instead." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <Assign DisplayName="01 - Default Not Posted" sap2010:WorkflowViewState.IdRef="Assign_1">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Boolean">[out_AlreadyPosted]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Boolean">[False]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="02 - Ensure Output Folder" sap2010:WorkflowViewState.IdRef="Assign_2">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Object">[objIgnored]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Object">[Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(in_JournalOutputPath)))]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[File.Exists(in_JournalOutputPath)]" DisplayName="If Journal File Exists" sap2010:WorkflowViewState.IdRef="If_2">
+      <If.Then>
+        <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_2">
+          <sap:WorkflowViewStateService.ViewState>
+            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            </scg:Dictionary>
+          </sap:WorkflowViewStateService.ViewState>
+          <ui:ReadRange AddHeaders="True" DataTable="[dtExisting]" DisplayName="Read Existing Journal" Range="{x:Null}" SheetName="[in_SheetName]" WorkbookPath="[in_JournalOutputPath]" sap2010:WorkflowViewState.IdRef="ReadRange_1"/>
+          <If Condition="[dtExisting.Columns.Contains(&quot;JournalId&quot;) AndAlso dtExisting.Rows.Cast(Of DataRow)().Any(Function(r) Convert.ToString(r(&quot;JournalId&quot;)).Trim.Equals(in_JournalId, StringComparison.OrdinalIgnoreCase))]" DisplayName="If Journal Already Exists" sap2010:WorkflowViewState.IdRef="If_1">
+            <If.Then>
+              <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_1">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+                <Assign DisplayName="Mark Already Posted" sap2010:WorkflowViewState.IdRef="Assign_3">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:Boolean">[out_AlreadyPosted]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:Boolean">[True]</InArgument>
+                  </Assign.Value>
+                </Assign>
+                <ui:LogMessage DisplayName="Log Duplicate Journal" Level="Warn" Message="[&quot;Journal &quot; + in_JournalId + &quot; already exists in the ledger; skipping append.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1"/>
+              </Sequence>
+            </If.Then>
+          </If>
+        </Sequence>
+      </If.Then>
+      <If.Else>
+        <Sequence DisplayName="Else" sap2010:WorkflowViewState.IdRef="Sequence_3">
+          <sap:WorkflowViewStateService.ViewState>
+            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            </scg:Dictionary>
+          </sap:WorkflowViewStateService.ViewState>
+          <ui:WriteRange AddHeaders="True" DataTable="[in_JournalLines]" DisplayName="Create Journal File With Headers" SheetName="[in_SheetName]" StartingCell="A1" WorkbookPath="[in_JournalOutputPath]" sap2010:WorkflowViewState.IdRef="WriteRange_1"/>
+          <Assign DisplayName="Mark New File Written" sap2010:WorkflowViewState.IdRef="Assign_4">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:Boolean">[blnWroteNewFile]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:Boolean">[True]</InArgument>
+            </Assign.Value>
+          </Assign>
+        </Sequence>
+      </If.Else>
+    </If>
+    <If Condition="[Not out_AlreadyPosted AndAlso Not blnWroteNewFile]" DisplayName="If Append Needed" sap2010:WorkflowViewState.IdRef="If_3">
+      <If.Then>
+        <ui:AppendRange DataTable="[in_JournalLines]" DisplayName="Append Journal Lines" SheetName="[in_SheetName]" WorkbookPath="[in_JournalOutputPath]" sap2010:WorkflowViewState.IdRef="AppendRange_1"/>
+      </If.Then>
+    </If>
+    <If Condition="[Not out_AlreadyPosted]" DisplayName="If Newly Posted" sap2010:WorkflowViewState.IdRef="If_4">
+      <If.Then>
+        <ui:LogMessage DisplayName="Log Posted" Level="Info" Message="[&quot;Posted &quot; + in_JournalLines.Rows.Count.ToString + &quot; lines for &quot; + in_JournalId + &quot; to &quot; + in_JournalOutputPath]" sap2010:WorkflowViewState.IdRef="LogMessage_2"/>
+      </If.Then>
+    </If>
+  </Sequence>
+</Activity>

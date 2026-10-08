@@ -1,0 +1,322 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="SetTransactionStatus">
+  <x:Members>
+    <x:Property Name="in_BusinessException" Type="InArgument(ui:BusinessRuleException)"/>
+    <x:Property Name="in_TransactionItem" Type="InArgument(ui:QueueItem)"/>
+    <x:Property Name="io_RetryNumber" Type="InOutArgument(x:Int32)"/>
+    <x:Property Name="io_TransactionNumber" Type="InOutArgument(x:Int32)"/>
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))"/>
+    <x:Property Name="in_SystemException" Type="InArgument(s:Exception)"/>
+    <x:Property Name="io_ConsecutiveSystemExceptions" Type="InOutArgument(x:Int32)"/>
+    <x:Property Name="in_TransactionField1" Type="InArgument(x:String)"/>
+    <x:Property Name="in_TransactionField2" Type="InArgument(x:String)"/>
+    <x:Property Name="in_TransactionID" Type="InArgument(x:String)"/>
+    <x:Property Name="in_JournalId" Type="InArgument(x:String)"/>
+  </x:Members>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="16">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="17">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Set Transaction Status" sap2010:WorkflowViewState.IdRef="Sequence_5">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:Boolean" Name="blnQueueMode"/>
+      <Variable x:TypeArguments="x:String" Name="strScreenshotPath"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Purpose" Text="Success -&gt; next transaction. Business exception -&gt; record the reason and move on (retrying bad data never helps). System exception -&gt; screenshot, clean up, then retry per MaxRetryNumber (local) or let the queue's Auto Retry handle it (Orchestrator)." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <Assign DisplayName="Is Queue Mode" sap2010:WorkflowViewState.IdRef="Assign_8">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Boolean">[blnQueueMode]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Boolean">[in_Config("RunMode").ToString.Equals("Orchestrator", StringComparison.OrdinalIgnoreCase)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[in_SystemException Is Nothing AndAlso in_BusinessException Is Nothing]" DisplayName="If Transaction Successful" sap2010:WorkflowViewState.IdRef="If_5">
+      <If.Then>
+        <Sequence DisplayName="Success" sap2010:WorkflowViewState.IdRef="Sequence_1">
+          <sap:WorkflowViewStateService.ViewState>
+            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            </scg:Dictionary>
+          </sap:WorkflowViewStateService.ViewState>
+          <If Condition="[blnQueueMode]" DisplayName="If Queue Mode (Successful)" sap2010:WorkflowViewState.IdRef="If_1">
+            <If.Then>
+              <ui:SetTransactionStatus DisplayName="Set Transaction Status (Successful)" FolderPath="[in_Config(&quot;OrchestratorQueueFolder&quot;).ToString]" Status="Successful" TransactionItem="[in_TransactionItem]" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_1">
+                <ui:SetTransactionStatus.Output>
+                  <scg:Dictionary x:TypeArguments="x:String, InArgument">
+                    <InArgument x:TypeArguments="x:String" x:Key="JournalId">[in_JournalId]</InArgument>
+                  </scg:Dictionary>
+                </ui:SetTransactionStatus.Output>
+              </ui:SetTransactionStatus>
+            </If.Then>
+          </If>
+          <ui:LogMessage DisplayName="Log Success" Level="Info" Message="[in_Config(&quot;LogMessage_Success&quot;).ToString + &quot; Invoice &quot; + in_TransactionID + &quot; posted as &quot; + in_JournalId + &quot;.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1"/>
+          <TryCatch DisplayName="Try Write Run Report (Successful)" sap2010:WorkflowViewState.IdRef="TryCatch_1">
+            <TryCatch.Try>
+              <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Write Run Report (Successful)" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_1" UnSafe="False" WorkflowFileName="Reporting\WriteRunReport.xaml">
+                <ui:InvokeWorkflowFile.Arguments>
+                  <InArgument x:TypeArguments="x:String" x:Key="in_ReportPath">[in_Config("RunReportPath").ToString]</InArgument>
+                  <InArgument x:TypeArguments="x:String" x:Key="in_Reference">[in_TransactionID]</InArgument>
+                  <InArgument x:TypeArguments="x:String" x:Key="in_Status">["Successful"]</InArgument>
+                  <InArgument x:TypeArguments="x:String" x:Key="in_ExceptionType">[""]</InArgument>
+                  <InArgument x:TypeArguments="x:String" x:Key="in_Reason">[""]</InArgument>
+                  <InArgument x:TypeArguments="x:String" x:Key="in_JournalId">[in_JournalId]</InArgument>
+                </ui:InvokeWorkflowFile.Arguments>
+              </ui:InvokeWorkflowFile>
+            </TryCatch.Try>
+            <TryCatch.Catches>
+              <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_1">
+                <ActivityAction x:TypeArguments="s:Exception">
+                  <ActivityAction.Argument>
+                    <DelegateInArgument x:TypeArguments="s:Exception" Name="exReport"/>
+                  </ActivityAction.Argument>
+                  <ui:LogMessage DisplayName="Log Report Failure" Level="Warn" Message="[&quot;Run report could not be updated: &quot; + exReport.Message]" sap2010:WorkflowViewState.IdRef="LogMessage_2"/>
+                </ActivityAction>
+              </Catch>
+            </TryCatch.Catches>
+          </TryCatch>
+          <Assign DisplayName="Next Transaction" sap2010:WorkflowViewState.IdRef="Assign_1">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:Int32">[io_TransactionNumber]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:Int32">[io_TransactionNumber + 1]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Reset Retry Number" sap2010:WorkflowViewState.IdRef="Assign_2">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:Int32">[io_RetryNumber]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:Int32">[0]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Reset Consecutive System Exceptions" sap2010:WorkflowViewState.IdRef="Assign_3">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:Int32">[io_ConsecutiveSystemExceptions]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:Int32">[0]</InArgument>
+            </Assign.Value>
+          </Assign>
+        </Sequence>
+      </If.Then>
+      <If.Else>
+        <If Condition="[in_BusinessException IsNot Nothing]" DisplayName="If Business Exception" sap2010:WorkflowViewState.IdRef="If_4">
+          <If.Then>
+            <Sequence DisplayName="Business Rule Exception" sap2010:WorkflowViewState.IdRef="Sequence_2">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+              <If Condition="[blnQueueMode]" DisplayName="If Queue Mode (Business)" sap2010:WorkflowViewState.IdRef="If_2">
+                <If.Then>
+                  <ui:SetTransactionStatus DisplayName="Set Transaction Status (Business Exception)" ErrorType="Business" FolderPath="[in_Config(&quot;OrchestratorQueueFolder&quot;).ToString]" Reason="[in_BusinessException.Message]" Status="Failed" TransactionItem="[in_TransactionItem]" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_2"/>
+                </If.Then>
+              </If>
+              <ui:LogMessage DisplayName="Log Business Rule Exception" Level="Warn" Message="[in_Config(&quot;LogMessage_BusinessRuleException&quot;).ToString + in_TransactionID + &quot;: &quot; + in_BusinessException.Message]" sap2010:WorkflowViewState.IdRef="LogMessage_3"/>
+              <TryCatch DisplayName="Try Write Run Report (Business Exception)" sap2010:WorkflowViewState.IdRef="TryCatch_2">
+                <TryCatch.Try>
+                  <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Write Run Report (Business Exception)" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_2" UnSafe="False" WorkflowFileName="Reporting\WriteRunReport.xaml">
+                    <ui:InvokeWorkflowFile.Arguments>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_ReportPath">[in_Config("RunReportPath").ToString]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_Reference">[in_TransactionID]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_Status">["Business Exception"]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_ExceptionType">["Business"]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_Reason">[in_BusinessException.Message]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_JournalId">[""]</InArgument>
+                    </ui:InvokeWorkflowFile.Arguments>
+                  </ui:InvokeWorkflowFile>
+                </TryCatch.Try>
+                <TryCatch.Catches>
+                  <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_2">
+                    <ActivityAction x:TypeArguments="s:Exception">
+                      <ActivityAction.Argument>
+                        <DelegateInArgument x:TypeArguments="s:Exception" Name="exReport"/>
+                      </ActivityAction.Argument>
+                      <ui:LogMessage DisplayName="Log Report Failure" Level="Warn" Message="[&quot;Run report could not be updated: &quot; + exReport.Message]" sap2010:WorkflowViewState.IdRef="LogMessage_4"/>
+                    </ActivityAction>
+                  </Catch>
+                </TryCatch.Catches>
+              </TryCatch>
+              <Assign DisplayName="Next Transaction" sap2010:WorkflowViewState.IdRef="Assign_4">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Int32">[io_TransactionNumber]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Int32">[io_TransactionNumber + 1]</InArgument>
+                </Assign.Value>
+              </Assign>
+              <Assign DisplayName="Reset Retry Number" sap2010:WorkflowViewState.IdRef="Assign_5">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Int32">[io_RetryNumber]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Int32">[0]</InArgument>
+                </Assign.Value>
+              </Assign>
+              <Assign DisplayName="Reset Consecutive System Exceptions" sap2010:WorkflowViewState.IdRef="Assign_6">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Int32">[io_ConsecutiveSystemExceptions]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Int32">[0]</InArgument>
+                </Assign.Value>
+              </Assign>
+            </Sequence>
+          </If.Then>
+          <If.Else>
+            <Sequence DisplayName="System Exception" sap2010:WorkflowViewState.IdRef="Sequence_4">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+              <ui:LogMessage DisplayName="Log System Exception" Level="Error" Message="[in_Config(&quot;LogMessage_ApplicationException&quot;).ToString + in_TransactionID + &quot;: &quot; + in_SystemException.Message + &quot; at Source: &quot; + in_SystemException.Source]" sap2010:WorkflowViewState.IdRef="LogMessage_5"/>
+              <TryCatch DisplayName="Try Take Screenshot" sap2010:WorkflowViewState.IdRef="TryCatch_3">
+                <TryCatch.Try>
+                  <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Take Screenshot" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_3" UnSafe="False" WorkflowFileName="Framework\TakeScreenshot.xaml">
+                    <ui:InvokeWorkflowFile.Arguments>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_Folder">[in_Config("ExScreenshotsFolderPath").ToString]</InArgument>
+                      <InOutArgument x:TypeArguments="x:String" x:Key="io_FilePath">[strScreenshotPath]</InOutArgument>
+                    </ui:InvokeWorkflowFile.Arguments>
+                  </ui:InvokeWorkflowFile>
+                </TryCatch.Try>
+                <TryCatch.Catches>
+                  <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_3">
+                    <ActivityAction x:TypeArguments="s:Exception">
+                      <ActivityAction.Argument>
+                        <DelegateInArgument x:TypeArguments="s:Exception" Name="exScreenshot"/>
+                      </ActivityAction.Argument>
+                      <ui:LogMessage DisplayName="Log Screenshot Failure" Level="Warn" Message="[&quot;Screenshot failed: &quot; + exScreenshot.Message]" sap2010:WorkflowViewState.IdRef="LogMessage_6"/>
+                    </ActivityAction>
+                  </Catch>
+                </TryCatch.Catches>
+              </TryCatch>
+              <TryCatch DisplayName="Try Close All Applications" sap2010:WorkflowViewState.IdRef="TryCatch_4">
+                <TryCatch.Try>
+                  <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Close All Applications" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_4" UnSafe="False" WorkflowFileName="Framework\CloseAllApplications.xaml">
+                    <ui:InvokeWorkflowFile.Arguments>
+                      <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)" x:Key="in_Config">[in_Config]</InArgument>
+                    </ui:InvokeWorkflowFile.Arguments>
+                  </ui:InvokeWorkflowFile>
+                </TryCatch.Try>
+                <TryCatch.Catches>
+                  <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_4">
+                    <ActivityAction x:TypeArguments="s:Exception">
+                      <ActivityAction.Argument>
+                        <DelegateInArgument x:TypeArguments="s:Exception" Name="exClose"/>
+                      </ActivityAction.Argument>
+                      <Sequence DisplayName="Handle exClose" sap2010:WorkflowViewState.IdRef="Sequence_3">
+                        <sap:WorkflowViewStateService.ViewState>
+                          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                          </scg:Dictionary>
+                        </sap:WorkflowViewStateService.ViewState>
+                        <ui:LogMessage DisplayName="Log Close Failure" Level="Warn" Message="[&quot;Applications failed to close gracefully: &quot; + exClose.Message]" sap2010:WorkflowViewState.IdRef="LogMessage_7"/>
+                        <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Kill All Processes" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_5" UnSafe="False" WorkflowFileName="Framework\KillAllProcesses.xaml">
+                          <ui:InvokeWorkflowFile.Arguments>
+                            <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)" x:Key="in_Config">[in_Config]</InArgument>
+                          </ui:InvokeWorkflowFile.Arguments>
+                        </ui:InvokeWorkflowFile>
+                      </Sequence>
+                    </ActivityAction>
+                  </Catch>
+                </TryCatch.Catches>
+              </TryCatch>
+              <If Condition="[blnQueueMode]" DisplayName="If Queue Mode (System)" sap2010:WorkflowViewState.IdRef="If_3">
+                <If.Then>
+                  <ui:SetTransactionStatus DisplayName="Set Transaction Status (System Exception)" ErrorType="Application" FolderPath="[in_Config(&quot;OrchestratorQueueFolder&quot;).ToString]" Reason="[in_SystemException.Message]" Status="Failed" TransactionItem="[in_TransactionItem]" sap2010:WorkflowViewState.IdRef="SetTransactionStatus_3"/>
+                </If.Then>
+              </If>
+              <TryCatch DisplayName="Try Write Run Report (System Exception)" sap2010:WorkflowViewState.IdRef="TryCatch_5">
+                <TryCatch.Try>
+                  <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Write Run Report (System Exception)" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_6" UnSafe="False" WorkflowFileName="Reporting\WriteRunReport.xaml">
+                    <ui:InvokeWorkflowFile.Arguments>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_ReportPath">[in_Config("RunReportPath").ToString]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_Reference">[in_TransactionID]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_Status">["System Exception"]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_ExceptionType">["Application"]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_Reason">[in_SystemException.Message + " (attempt " + (io_RetryNumber + 1).ToString + ")"]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_JournalId">[""]</InArgument>
+                    </ui:InvokeWorkflowFile.Arguments>
+                  </ui:InvokeWorkflowFile>
+                </TryCatch.Try>
+                <TryCatch.Catches>
+                  <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_5">
+                    <ActivityAction x:TypeArguments="s:Exception">
+                      <ActivityAction.Argument>
+                        <DelegateInArgument x:TypeArguments="s:Exception" Name="exReport"/>
+                      </ActivityAction.Argument>
+                      <ui:LogMessage DisplayName="Log Report Failure" Level="Warn" Message="[&quot;Run report could not be updated: &quot; + exReport.Message]" sap2010:WorkflowViewState.IdRef="LogMessage_8"/>
+                    </ActivityAction>
+                  </Catch>
+                </TryCatch.Catches>
+              </TryCatch>
+              <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Retry Current Transaction" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_7" UnSafe="False" WorkflowFileName="Framework\RetryCurrentTransaction.xaml">
+                <ui:InvokeWorkflowFile.Arguments>
+                  <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)" x:Key="in_Config">[in_Config]</InArgument>
+                  <InOutArgument x:TypeArguments="x:Int32" x:Key="io_RetryNumber">[io_RetryNumber]</InOutArgument>
+                  <InOutArgument x:TypeArguments="x:Int32" x:Key="io_TransactionNumber">[io_TransactionNumber]</InOutArgument>
+                  <InArgument x:TypeArguments="s:Exception" x:Key="in_SystemException">[in_SystemException]</InArgument>
+                  <InArgument x:TypeArguments="x:Boolean" x:Key="in_QueueRetry">[blnQueueMode]</InArgument>
+                </ui:InvokeWorkflowFile.Arguments>
+              </ui:InvokeWorkflowFile>
+              <Assign DisplayName="Increment Consecutive System Exceptions" sap2010:WorkflowViewState.IdRef="Assign_7">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Int32">[io_ConsecutiveSystemExceptions]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Int32">[io_ConsecutiveSystemExceptions + 1]</InArgument>
+                </Assign.Value>
+              </Assign>
+            </Sequence>
+          </If.Else>
+        </If>
+      </If.Else>
+    </If>
+  </Sequence>
+</Activity>

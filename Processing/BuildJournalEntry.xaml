@@ -1,0 +1,186 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="BuildJournalEntry">
+  <x:Members>
+    <x:Property Name="in_InvoiceNumber" Type="InArgument(x:String)"/>
+    <x:Property Name="in_InvoiceDate" Type="InArgument(s:DateTime)"/>
+    <x:Property Name="in_PostingDate" Type="InArgument(s:DateTime)"/>
+    <x:Property Name="in_VendorId" Type="InArgument(x:String)"/>
+    <x:Property Name="in_VendorName" Type="InArgument(x:String)"/>
+    <x:Property Name="in_Amount" Type="InArgument(x:Decimal)"/>
+    <x:Property Name="in_ExpenseGL" Type="InArgument(x:String)"/>
+    <x:Property Name="in_APAccount" Type="InArgument(x:String)"/>
+    <x:Property Name="in_JournalPrefix" Type="InArgument(x:String)"/>
+    <x:Property Name="out_JournalLines" Type="OutArgument(sd:DataTable)"/>
+    <x:Property Name="out_JournalId" Type="OutArgument(x:String)"/>
+  </x:Members>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="16">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="17">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Build Journal Entry" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:Decimal" Name="decDebits"/>
+      <Variable x:TypeArguments="x:Decimal" Name="decCredits"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Purpose" Text="Two balanced lines: debit the vendor's default expense GL, credit Accounts Payable. JournalId is AP-&lt;InvoiceNumber&gt; so a retry can detect an already-posted invoice." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <Assign DisplayName="01 - Set Journal Id" sap2010:WorkflowViewState.IdRef="Assign_1">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">[out_JournalId]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[in_JournalPrefix + "-" + in_InvoiceNumber]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="02 - Create Journal Lines Table" sap2010:WorkflowViewState.IdRef="Assign_2">
+      <Assign.To>
+        <OutArgument x:TypeArguments="sd:DataTable">[out_JournalLines]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="sd:DataTable">[New DataTable]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <InvokeMethod DisplayName="Add Column JournalId" sap2010:WorkflowViewState.IdRef="InvokeMethod_1" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["JournalId"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(String)]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column LineNumber" sap2010:WorkflowViewState.IdRef="InvokeMethod_2" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["LineNumber"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(Int32)]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column Account" sap2010:WorkflowViewState.IdRef="InvokeMethod_3" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Account"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(String)]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column Debit" sap2010:WorkflowViewState.IdRef="InvokeMethod_4" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Debit"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(Decimal)]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column Credit" sap2010:WorkflowViewState.IdRef="InvokeMethod_5" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Credit"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(Decimal)]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column VendorId" sap2010:WorkflowViewState.IdRef="InvokeMethod_6" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["VendorId"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(String)]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column VendorName" sap2010:WorkflowViewState.IdRef="InvokeMethod_7" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["VendorName"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(String)]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column InvoiceNumber" sap2010:WorkflowViewState.IdRef="InvokeMethod_8" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["InvoiceNumber"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(String)]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column InvoiceDate" sap2010:WorkflowViewState.IdRef="InvokeMethod_9" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["InvoiceDate"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(String)]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column PostingDate" sap2010:WorkflowViewState.IdRef="InvokeMethod_10" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["PostingDate"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(String)]</InArgument>
+    </InvokeMethod>
+    <InvokeMethod DisplayName="Add Column Description" sap2010:WorkflowViewState.IdRef="InvokeMethod_11" MethodName="Add">
+      <InvokeMethod.TargetObject>
+        <InArgument x:TypeArguments="sd:DataColumnCollection">[out_JournalLines.Columns]</InArgument>
+      </InvokeMethod.TargetObject>
+      <InArgument x:TypeArguments="x:String">["Description"]</InArgument>
+      <InArgument x:TypeArguments="s:Type">[GetType(String)]</InArgument>
+    </InvokeMethod>
+    <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{out_JournalId, 1, in_ExpenseGL, in_Amount, 0D, in_VendorId, in_VendorName, in_InvoiceNumber, in_InvoiceDate.ToString(&quot;yyyy-MM-dd&quot;, CultureInfo.InvariantCulture), in_PostingDate.ToString(&quot;yyyy-MM-dd&quot;, CultureInfo.InvariantCulture), &quot;Expense for invoice &quot; + in_InvoiceNumber}]" DataTable="[out_JournalLines]" DisplayName="03 - Debit Expense Line" sap2010:WorkflowViewState.IdRef="AddDataRow_1"/>
+    <ui:AddDataRow DataRow="{x:Null}" ArrayRow="[{out_JournalId, 2, in_APAccount, 0D, in_Amount, in_VendorId, in_VendorName, in_InvoiceNumber, in_InvoiceDate.ToString(&quot;yyyy-MM-dd&quot;, CultureInfo.InvariantCulture), in_PostingDate.ToString(&quot;yyyy-MM-dd&quot;, CultureInfo.InvariantCulture), &quot;AP credit for invoice &quot; + in_InvoiceNumber}]" DataTable="[out_JournalLines]" DisplayName="04 - Credit AP Line" sap2010:WorkflowViewState.IdRef="AddDataRow_2"/>
+    <Assign DisplayName="05 - Total Debits" sap2010:WorkflowViewState.IdRef="Assign_3">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Decimal">[decDebits]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Decimal">[Convert.ToDecimal(out_JournalLines.Compute("SUM(Debit)", ""))]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="06 - Total Credits" sap2010:WorkflowViewState.IdRef="Assign_4">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Decimal">[decCredits]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Decimal">[Convert.ToDecimal(out_JournalLines.Compute("SUM(Credit)", ""))]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[decDebits &lt;&gt; decCredits]" DisplayName="07 - Debits Equal Credits" sap2010:WorkflowViewState.IdRef="If_1">
+      <If.Then>
+        <Throw DisplayName="Throw Out Of Balance" Exception="[New InvalidOperationException(&quot;Journal &quot; + out_JournalId + &quot; is out of balance: debits &quot; + decDebits.ToString + &quot; vs credits &quot; + decCredits.ToString + &quot;.&quot;)]" sap2010:WorkflowViewState.IdRef="Throw_1"/>
+      </If.Then>
+    </If>
+    <ui:LogMessage DisplayName="Log Journal Built" Level="Info" Message="[&quot;Built journal &quot; + out_JournalId + &quot; (2 lines, &quot; + in_Amount.ToString(&quot;N2&quot;, CultureInfo.InvariantCulture) + &quot;).&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1"/>
+  </Sequence>
+</Activity>

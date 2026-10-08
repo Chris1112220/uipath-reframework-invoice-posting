@@ -1,0 +1,147 @@
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" mc:Ignorable="sap sap2010" x:Class="GetTransactionData">
+  <x:Members>
+    <x:Property Name="in_TransactionNumber" Type="InArgument(x:Int32)"/>
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))"/>
+    <x:Property Name="in_LocalTransactions" Type="InArgument(sd:DataTable)"/>
+    <x:Property Name="out_TransactionItem" Type="OutArgument(ui:QueueItem)"/>
+    <x:Property Name="out_TransactionField1" Type="OutArgument(x:String)"/>
+    <x:Property Name="out_TransactionField2" Type="OutArgument(x:String)"/>
+    <x:Property Name="out_TransactionID" Type="OutArgument(x:String)"/>
+  </x:Members>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <scg:List x:TypeArguments="x:String" Capacity="16">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Globalization</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </scg:List>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="17">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Get Transaction Data" sap2010:WorkflowViewState.IdRef="Sequence_3">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataRow" Name="drInvoice"/>
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:Comment DisplayName="Purpose" Text="Orchestrator mode: Get Transaction Item from the InvoicePosting queue.&#10;Local mode: wrap row N of the validated invoice table in a QueueItem with the same SpecificContent keys, so Process.xaml is identical in both modes." sap2010:WorkflowViewState.IdRef="Comment_1"/>
+    <If Condition="[in_Config(&quot;RunMode&quot;).ToString.Equals(&quot;Orchestrator&quot;, StringComparison.OrdinalIgnoreCase)]" DisplayName="If Orchestrator Mode" sap2010:WorkflowViewState.IdRef="If_2">
+      <If.Then>
+        <ui:GetQueueItem DisplayName="Get Transaction Item" FolderPath="[in_Config(&quot;OrchestratorQueueFolder&quot;).ToString]" QueueType="[in_Config(&quot;OrchestratorQueueName&quot;).ToString]" TransactionItem="[out_TransactionItem]" sap2010:WorkflowViewState.IdRef="GetQueueItem_1"/>
+      </If.Then>
+      <If.Else>
+        <If Condition="[in_LocalTransactions IsNot Nothing AndAlso in_TransactionNumber &lt;= in_LocalTransactions.Rows.Count]" DisplayName="If Local Row Available" sap2010:WorkflowViewState.IdRef="If_1">
+          <If.Then>
+            <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_1">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+              <Assign DisplayName="Get Invoice Row" sap2010:WorkflowViewState.IdRef="Assign_1">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="sd:DataRow">[drInvoice]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="sd:DataRow">[in_LocalTransactions.Rows(in_TransactionNumber - 1)]</InArgument>
+                </Assign.Value>
+              </Assign>
+              <Assign DisplayName="Build Local Transaction Item" sap2010:WorkflowViewState.IdRef="Assign_2">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="ui:QueueItem">[out_TransactionItem]</OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="ui:QueueItem">[New QueueItem With {.Reference = drInvoice("InvoiceNumber").ToString, .SpecificContent = New Dictionary(Of String, Object) From {{"InvoiceNumber", drInvoice("InvoiceNumber").ToString}, {"InvoiceDate", drInvoice("InvoiceDate").ToString}, {"VendorId", drInvoice("VendorId").ToString}, {"VendorName", drInvoice("VendorName").ToString}, {"PONumber", drInvoice("PONumber").ToString}, {"Amount", drInvoice("Amount").ToString}, {"Currency", drInvoice("Currency").ToString}, {"Description", drInvoice("Description").ToString}}}]</InArgument>
+                </Assign.Value>
+              </Assign>
+            </Sequence>
+          </If.Then>
+          <If.Else>
+            <Assign DisplayName="No More Local Transactions" sap2010:WorkflowViewState.IdRef="Assign_3">
+              <Assign.To>
+                <OutArgument x:TypeArguments="ui:QueueItem">[out_TransactionItem]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="ui:QueueItem">[Nothing]</InArgument>
+              </Assign.Value>
+            </Assign>
+          </If.Else>
+        </If>
+      </If.Else>
+    </If>
+    <If Condition="[out_TransactionItem IsNot Nothing]" DisplayName="If Transaction Retrieved" sap2010:WorkflowViewState.IdRef="If_3">
+      <If.Then>
+        <Sequence DisplayName="Then" sap2010:WorkflowViewState.IdRef="Sequence_2">
+          <sap:WorkflowViewStateService.ViewState>
+            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            </scg:Dictionary>
+          </sap:WorkflowViewStateService.ViewState>
+          <Assign DisplayName="Set TransactionID (Invoice Number)" sap2010:WorkflowViewState.IdRef="Assign_4">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[out_TransactionID]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[out_TransactionItem.SpecificContent("InvoiceNumber").ToString]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Set TransactionField1 (Vendor)" sap2010:WorkflowViewState.IdRef="Assign_5">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[out_TransactionField1]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[out_TransactionItem.SpecificContent("VendorId").ToString]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <Assign DisplayName="Set TransactionField2 (Amount)" sap2010:WorkflowViewState.IdRef="Assign_6">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">[out_TransactionField2]</OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">[out_TransactionItem.SpecificContent("Amount").ToString]</InArgument>
+            </Assign.Value>
+          </Assign>
+          <ui:LogMessage DisplayName="Log Transaction Retrieved" Level="Info" Message="[in_Config(&quot;LogMessage_GetTransactionData&quot;).ToString + in_TransactionNumber.ToString + &quot; (&quot; + out_TransactionID + &quot;)&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1"/>
+        </Sequence>
+      </If.Then>
+      <If.Else>
+        <ui:LogMessage DisplayName="Log No More Data" Level="Info" Message="[&quot;No more transactions to process.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_2"/>
+      </If.Else>
+    </If>
+  </Sequence>
+</Activity>
