@@ -1,0 +1,6 @@
+{
+  "Name": "Invoice_Posting_REFramework",
+  "ProjectType": "Process",
+  "Description": "Portfolio demo: unattended AP invoice posting on UiPath REFramework (Dispatcher + Performer). Validates vendor invoices against a vendor master and open POs (3-way match with a configurable tolerance), builds balanced journal entries, posts them to a simulated ERP (Excel), and reports every invoice's outcome. All data is fictional.",
+  "MainFile": "Main.xaml"
+}

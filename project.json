@@ -1,0 +1,131 @@
+{
+  "name": "Invoice_Posting_REFramework",
+  "projectId": "6f1c2a9e-4b7d-4e2a-9c1f-3a5b7d9e0c21",
+  "description": "Portfolio demo: unattended AP invoice posting on UiPath REFramework (Dispatcher + Performer). Validates vendor invoices against a vendor master and open POs (3-way match with a configurable tolerance), builds balanced journal entries, posts them to a simulated ERP (Excel), and reports every invoice's outcome. All data is fictional.",
+  "main": "Main.xaml",
+  "dependencies": {
+    "UiPath.Excel.Activities": "[3.4.1]",
+    "UiPath.System.Activities": "[26.2.7]",
+    "UiPath.Testing.Activities": "[25.10.1]",
+    "UiPath.UIAutomation.Activities": "[25.10.39]"
+  },
+  "webServices": [],
+  "entitiesStores": [],
+  "schemaVersion": "4.0",
+  "studioVersion": "25.10.17.0",
+  "projectVersion": "1.0.0",
+  "runtimeOptions": {
+    "exceptionHandlerWorkflow": "GlobalHandlerX.xaml",
+    "autoDispose": false,
+    "netFrameworkLazyLoading": false,
+    "isPausable": true,
+    "isAttended": false,
+    "requiresUserInteraction": true,
+    "supportsPersistence": false,
+    "workflowSerialization": "NewtonsoftJson",
+    "excludedLoggedData": [
+      "Private:*",
+      "*password*"
+    ],
+    "executionType": "Workflow",
+    "readyForPiP": false,
+    "startsInPiP": false,
+    "mustRestoreAllDependencies": true,
+    "pipType": "ChildSession"
+  },
+  "designOptions": {
+    "projectProfile": "Developement",
+    "outputType": "Process",
+    "libraryOptions": {
+      "privateWorkflows": []
+    },
+    "processOptions": {
+      "ignoredFiles": []
+    },
+    "fileInfoCollection": [
+      {
+        "editingStatus": "Publishable",
+        "testCaseId": "cc7927d3-efc3-41c8-a5e2-24cb51b963dd",
+        "testCaseType": "TestCase",
+        "executionTemplateType": "TestCase",
+        "fileName": "Tests\\Test_InitAllSettings.xaml"
+      },
+      {
+        "editingStatus": "Publishable",
+        "testCaseId": "5e66512d-86ee-43a7-b8fd-aaebe2a58f72",
+        "testCaseType": "TestCase",
+        "executionTemplateType": "TestCase",
+        "fileName": "Tests\\Test_ValidateInvoice_HappyPath.xaml"
+      },
+      {
+        "editingStatus": "Publishable",
+        "testCaseId": "17819b98-d175-42a9-b784-338121647b02",
+        "testCaseType": "TestCase",
+        "executionTemplateType": "TestCase",
+        "fileName": "Tests\\Test_ValidateInvoice_UnknownVendor.xaml"
+      },
+      {
+        "editingStatus": "Publishable",
+        "testCaseId": "3a9be15a-da00-48a4-81e7-9cc1cd24378c",
+        "testCaseType": "TestCase",
+        "executionTemplateType": "TestCase",
+        "fileName": "Tests\\Test_ValidateInvoice_NegativeAmount.xaml"
+      },
+      {
+        "editingStatus": "Publishable",
+        "testCaseId": "7bec469f-b584-4e8c-a916-667a8d152570",
+        "testCaseType": "TestCase",
+        "executionTemplateType": "TestCase",
+        "fileName": "Tests\\Test_ValidateInvoice_MissingPO.xaml"
+      },
+      {
+        "editingStatus": "Publishable",
+        "testCaseId": "42b06373-3f8f-4586-a599-bbcb1dd57471",
+        "testCaseType": "TestCase",
+        "executionTemplateType": "TestCase",
+        "fileName": "Tests\\Test_ValidateInvoice_OverTolerance.xaml"
+      },
+      {
+        "editingStatus": "Publishable",
+        "testCaseId": "372cc48d-9574-4cd7-9cc8-d4f60f7aca37",
+        "testCaseType": "TestCase",
+        "executionTemplateType": "TestCase",
+        "fileName": "Tests\\Test_ValidateInvoice_DataDriven.xaml"
+      },
+      {
+        "editingStatus": "Publishable",
+        "testCaseId": "213a647a-dd8a-4636-802d-3fd836d865dc",
+        "testCaseType": "TestCase",
+        "executionTemplateType": "TestCase",
+        "fileName": "Tests\\Test_BuildJournalEntry.xaml"
+      },
+      {
+        "editingStatus": "Publishable",
+        "testCaseId": "3bde43be-dbe3-4a78-bfee-d9fd5fc0e735",
+        "testCaseType": "TestCase",
+        "executionTemplateType": "TestCase",
+        "fileName": "Tests\\Test_PostJournalEntry_NoDoublePosting.xaml"
+      }
+    ],
+    "saveToCloud": false
+  },
+  "expressionLanguage": "VisualBasic",
+  "entryPoints": [
+    {
+      "filePath": "Main.xaml",
+      "uniqueId": "0b3e6c1a-7d2f-4a8e-b5c9-1e4f7a2d6b80",
+      "input": [],
+      "output": []
+    },
+    {
+      "filePath": "Dispatcher.xaml",
+      "uniqueId": "a4d8f2c6-3b1e-4f7a-9e5d-8c2b6a1f3e97",
+      "input": [],
+      "output": []
+    }
+  ],
+  "isTemplate": false,
+  "templateProjectData": {},
+  "publishData": {},
+  "targetFramework": "Windows"
+}

@@ -1,0 +1,32 @@
+################################################################################
+# UiPath Studio local state and caches
+################################################################################
+.local/
+.screenshots/
+.storage/
+.settings/
+.tmh/
+.project/
+.objects/
+.entities/
+*Autosaved*
+*.autosave
+~$*.xlsx
+RuntimeExecutionError*.html
+
+################################################################################
+# Run output (sample inputs in Data/Input and Data/Config.xlsx ARE committed)
+################################################################################
+Data/Output/*
+!Data/Output/.gitkeep
+!Data/Output/sample/
+Exceptions_Screenshots/
+
+################################################################################
+# Python / OS
+################################################################################
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+Thumbs.db
